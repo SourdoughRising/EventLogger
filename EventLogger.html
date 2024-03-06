@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="location">Event Logger</title>
+
+
+    <!--
+    SSSSS  TTTTTTTTT  Y   Y   L     EEEEE  SSSSS
+    S         TT       Y Y   L      E     S
+    SSSS     TT        Y    L      EEEE   SSSS
+        S    TT        Y    L      E          S
+    SSSSS     TT        Y    LLLLL  EEEEE  SSSSS
+    -->
+
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            transition: background-color 0.5s, color 0.5s;
+        }
+
+        body.dark-mode {
+            background-color: #333;
+            color: #fff;
+        }
+
+        h2 {
+            color: #007bff;
+        }
+
+        nav {
+            margin-bottom: 20px;
+        }
+
+        nav a {
+            margin-right: 20px;
+            text-decoration: none;
+            color: #007bff;
+        }
+
+        nav a:hover {
+            text-decoration: underline;
+        }
+
+        #colorPalette {
+            display: inline-block;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: #fff;
+            color: #333;
+            transition: background-color 0.5s, color 0.5s;
+        }
+
+        table.dark-mode {
+            background-color: #444;
+            color: #fff;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        /* for color selection swatches */
+        .swatch {
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+            margin-right: 5px;
+            cursor: pointer;
+            border: 1px solid #888;
+        }
+
+        .swatch[data-color="#FFC0CB"] {
+            background-color: #FFC0CB;
+        }
+
+        .swatch[data-color="#ADD8E6"] {
+            background-color: #ADD8E6;
+        }
+
+        .swatch[data-color="#98FB98"] {
+            background-color: #98FB98;
+        }
+
+        .swatch[data-color="#F0E68C"] {
+            background-color: #F0E68C;
+        }
+
+        .swatch[data-color="#FFD700"] {
+            background-color: #FFD700;
+        }
+
+        .swatch[data-color="#FFA07A"] {
+            background-color: #FFA07A;
+        }
+
+        .swatch[data-color="#D8BFD8"] {
+            background-color: #D8BFD8;
+        }
+
+        .swatch[data-color="#DDA0DD"] {
+            background-color: #DDA0DD;
+        }
+
+        .color-swatch {
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 5px;
+        }
+
+        .color-cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            vertical-align: middle;
+        }
+
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #locationInput {
+            margin-left: 10px;
+            margin-right: 10px;
+        }
+
+        #eventTable textarea {
+            width: 100%;
+            height: 100%;
+            border: none;
+            resize: none;
+            overflow: hidden;
+        }
+
+        #eventTable td {
+            position: relative;
+        }
+
+        @media print {
+
+
+            .printable {
+                display: block;
+            }
+
+            .no-print {
+                display: none;
+            }
+        }
+
+        /* General Table Styling */
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            /* Space between week tables */
+        }
+
+        .schedule-table td,
+        .schedule-table th {
+            border: 1px solid #ddd;
+            /* Light grey border */
+            text-align: center;
+            padding: 8px;
+        }
+
+        /* Header Styling */
+        .schedule-table .day-header {
+            background-color: #f2f2f2;
+            /* Light grey background */
+            color: black;
+            font-weight: bold;
+        }
+
+        /* Day Table Styling */
+        .day-table {
+
+            width: 100%;
+            /* Ensure the nested tables fill the cell */
+            border-collapse: collapse;
+            margin-top: 5px;
+            /* Space between header and shifts */
+        }
+
+        .day-table td,
+        .day-table th {
+            color: black;
+            border: 1px solid #ddd;
+            /* Consistent with outer table */
+            text-align: left;
+            padding: 4px;
+        }
+
+        /* Color Coding */
+        .day-table td {
+            color: black;
+            /* White text for visibility */
+            font-weight: bold;
+        }
+
+        /* Start Time Styling */
+        .start-time {
+            background-color: #666;
+            /* Dark grey background */
+            color: white;
+            width: 20%;
+            /* Fixed width for start time column */
+        }
+
+        /* Employee Cell Styling */
+        .day-table td:not(.start-time) {
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        /* Responsive Styling */
+        @media screen and (max-width: 600px) {
+
+            .schedule-table,
+            .day-table {
+                width: auto;
+            }
+        }
+    </style>
+</head>
+
+
+<!--
+    H   H  TTTTTTTTT  M       M  L         BBBBB  OOOO  DDDDD   Y   Y
+    H   H     TT     M M   M M  L          B   B O   O   D   D   Y Y
+    HHHHH     TT     M  M M  M  L          BBBBB O   O   D   D    Y
+    H   H     TT     M   M   M  L          B   B O   O   D   D    Y
+    H   H     TT     M       M  LLLLL      BBBBB  OOOO  DDDDD     Y
+    -->
+
+
+
+<body class="dark-mode">
+    <nav class="no-print">
+        <a href="#" onclick="showEventSection()">Event Logger</a>
+        <a href="#" onclick="showEmployeeSection()">Employee Manager</a>
+        <a href="#" onclick="showChangeLocation()">Change Location</a>
+        <div id="locationContainer"></div>
+        <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+    </nav>
+
+    <div id="eventSection">
+        <h2>Event Logger</h2>
+
+        <form id="eventForm" class="no-print">
+            <label for="empSelect">Select Employee:</label>
+            <select id="empSelect" name="empSelect" required>
+                <!-- Employee options will be dynamically added here -->
+            </select>
+            <br>
+            <label for="eventTime" required>Event Date and Time:</label>
+            <input type="datetime-local" id="eventTime" name="eventTime" required>
+            <button type="button" onclick="populateCurrentTime()">Current Time</button>
+            <br>
+            <label for="eventText" required>Event:</label>
+            <textarea id="eventText" name="eventText" rows="4" required></textarea>
+            <br>
+            <button type="button" onclick="addEvent()">Add Event</button>
+            <span id="errorMessage" style="color: red; margin-left: 10px;"></span>
+
+        </form>
+
+        <table id="eventTable" class="printable">
+            <thead>
+                <tr>
+                    <th>Employee</th>
+                    <th>Event Time</th>
+                    <th>Event Text</th>
+                    <th class="no-print">Action</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <button class="no-print" onclick="downloadEventsAsXML()">Export Events to XML</button>
+        <label for="pageBreakToggle" class="no-print">Disable Page Break:</label>
+        <input type="checkbox" id="pageBreakToggle" class="no-print">
+    </div>
+    <div id="employeeSection" style="display: none;">
+        <h2>Employee Manager</h2>
+
+        <form id="employeeForm">
+            <label for="empName">Employee Name:</label>
+            <input type="text" id="empName" name="empName" required>
+            <br>
+            <label for="empPhone">Phone Number:</label>
+            <input type="tel" id="empPhone" name="empPhone" required pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}">
+            <br>
+            <label for="empColor">Color Code:</label>
+            <input type="color" id="empColor" name="empColor" value="#000000">
+            <div id="colorPalette">
+                <div class="swatch" data-color="#FFC0CB"></div> <!-- Pink -->
+                <div class="swatch" data-color="#ADD8E6"></div> <!-- Light Blue -->
+                <div class="swatch" data-color="#98FB98"></div> <!-- Pale Green -->
+                <div class="swatch" data-color="#F0E68C"></div> <!-- Khaki -->
+                <div class="swatch" data-color="#FFD700"></div> <!-- Gold -->
+                <div class="swatch" data-color="#FFA07A"></div> <!-- Light Salmon -->
+                <div class="swatch" data-color="#D8BFD8"></div> <!-- Thistle -->
+                <div class="swatch" data-color="#DDA0DD"></div> <!-- Plum -->
+            </div>
+            <div>
+                <label for="daysOfWeek">Days of Work:</label>
+
+                <input type="checkbox" id="monday" name="day" value="Monday">
+                <label for="monday">Monday</label>
+                <input type="checkbox" id="tuesday" name="day" value="Tuesday">
+                <label for="tuesday">Tuesday</label>
+                <input type="checkbox" id="wednesday" name="day" value="Wednesday">
+                <label for="wednesday">Wednesday</label>
+                <input type="checkbox" id="thursday" name="day" value="Thursday">
+                <label for="thursday">Thursday</label>
+                <input type="checkbox" id="friday" name="day" value="Friday">
+                <label for="friday">Friday</label>
+                <input type="checkbox" id="saturday" name="day" value="Saturday">
+                <label for="saturday">Saturday</label>
+                <input type="checkbox" id="sunday" name="day" value="Sunday">
+                <label for="sunday">Sunday</label>
+
+            </div>
+            <br>
+            <label for="empStartTime">Start Time:</label>
+            <input type="time" id="empStartTime" name="empStartTime" required>
+            <br>
+            <label for="empEndTime">End Time:</label>
+            <input type="time" id="empEndTime" name="empEndTime" required>
+            <br>
+            <button type="button" onclick="addEditEmployee()">Add/Edit Employee</button>
+            <span id="employeeErrorMessage" style="color: red;"></span>
+        </form>
+
+        <table id="employeeTable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Phone Number</th>
+                    <th>Color Code</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Schedule</th>
+                    <th class="no-print">Action</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <br>
+
+        <div>
+            <label for="startDate">Select a Monday:</label>
+            <input type="date" id="startDate" name="startDate">
+            <button onclick="generateSchedule()">Generate Schedule</button>
+        </div>
+        <div id="scheduleContainer">
+            <!-- The schedule tables will be generated here -->
+        </div>
+
+    </div>
+
+    <span></span>
+    <div id="importedEventsSection" class="printable" style="break-before: page;">
+        <h2>Imported Events</h2>
+        <button id="deleteAllButton" style="float:inline-end">Delete All</button>
+
+        <table id="importedEventTable">
+            <thead>
+                <tr>
+                    <th>Employee</th>
+                    <th>Event Time</th>
+                    <th>Event Text</th>
+                    <th class="no-print">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Rows will be populated dynamically -->
+            </tbody>
+        </table>
+        <div id="mainEventButtons" class="no-print"></div>
+        <button type="button" onclick="importXML()" class="no-print">Import XML</button>
+        <button onclick="printReport()" class="no-print">Print Report</button>
+
+    </div>
+
+    <!--
+    JJJJJJJJ  AAAAA  V       V   AAAAA  SSSSS  CCCCC  RRRRR    IIII II  PPPPPP  TTTTTTTTT
+        JJ   A     A  V     V   A     A S      C      R    RR     II    P    PP    TT
+        JJ   AAAAAAA   V   V    AAAAAAA  SSSS  C      RRRRR       II    PPPPPP     TT
+    JJ  JJ   A     A    V V     A     A      S C      R  RR       II    P          TT
+    JJJJ   A     A     V      A     A  SSSSS  CCCCC  R   R     IIIIII  P          TT
+    -->
+
+
+    <script>
+        //Location
+        let locationValue = "Barratt Inn";
+        document.title = `${locationValue} Event Logger`;
+        function showChangeLocation() {
+            // Create the text input and set its value to the current locationValue
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = locationValue;
+            input.id = 'locationInput';
+
+            // Create the save button
+            const saveButton = document.createElement('button');
+            saveButton.textContent = 'Save';
+            saveButton.onclick = saveNewLocation;
+
+            // Append the input and button to the nav
+            const nav = document.querySelector('nav');
+            nav.appendChild(input);
+            nav.appendChild(saveButton);
+        }
+
+        function saveNewLocation() {
+            // Get the value from the text input
+            const locationInput = document.getElementById('locationInput');
+            locationValue = locationInput.value;
+
+            // Update the document title with the new location value
+            document.title = `${locationValue} Event Logger`;
+
+            // Remove the text input and save button
+            locationInput.remove();
+            this.remove();  // 'this' refers to the saveButton in this context
+        }
+
+
+
+
+        let employees = JSON.parse(localStorage.getItem('employees')) || [];
+        let events = JSON.parse(localStorage.getItem('events')) || [];
+        let importedEvents = JSON.parse(localStorage.getItem('importedEvents')) || [];
+
+        // Initial population of tables
+        updateEventTable();
+        updateEmployeeTable();
+        updateImportedEventTable();
+        // Populate employee dropdown
+        const empSelect = document.getElementById('empSelect');
+        populateEmployeeOptions();
+        populateImportedEventsTable();
+
+        /*
+        EEEEE  V       V  EEEEE  N   N TTTTT  SSSSS 
+        E      V     V   E      NN  N    T    S
+        EEEE    V   V    EEEE   N N N    T     SSSS
+        E        V V     E      N  NN    T        S
+        EEEEE     V      EEEEE  N   N    T    SSSSS
+        */
+
+
+        function populateCurrentTime() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = (now.getMonth() + 1).toString().padStart(2, '0');  // months are 0-indexed in JavaScript
+            const day = now.getDate().toString().padStart(2, '0');
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const formattedDateTime = `${year}-${month}-${day} ${hours}:${minutes}`;
+
+            document.getElementById('eventTime').value = formattedDateTime;
+        }
+
+
+        function addEvent() {
+
+            const empName = document.getElementById('empSelect').value;
+            const eventTime = document.getElementById('eventTime').value;
+            const eventText = document.getElementById('eventText').value;
+            const errorMessage = document.getElementById('errorMessage');
+
+            //current name submitting
+            let thisEmpName = empName;
+
+            // Check for validation
+            if (!eventTime || !eventText) {
+                errorMessage.textContent = 'Please fill out the required fields!';
+                return;  // Exit the function if validation fails
+            } else {
+                errorMessage.textContent = '';  // Clear the error message if validation passes
+            }
+
+            //Check for special characters
+            if (!isValidEventText(eventText)) {
+                // Display an error message to the user
+                errorMessage.textContent = 'Invalid characters detected in the event text. Please avoid using special characters like &, <, >, ", and \'.';
+
+            } else {
+                errorMessage.textContent = '';  // Clear the error message if validation passes
+
+
+                // Proceed with adding the event
+
+                const employee = employees.find(emp => emp.name === empName);
+                const bgColor = employee ? employee.color : '#FFF';  // Default to white if not found
+
+                const eventObj = { empName, eventTime, eventText, bgColor };
+                events.push(eventObj);
+
+                // Save events to localStorage
+                localStorage.setItem('events', JSON.stringify(events));
+
+                // Update the event table
+                updateEventTable();
+
+                // Clear the fields
+                document.getElementById('eventForm').reset();
+                document.getElementById('empSelect').value = thisEmpName;
+            }
+
+            //Check for special characters
+            function isValidEventText(eventText) {
+                // List of disallowed characters
+                const disallowedChars = ['&', '<', '>', '\"', '\''];
+
+                // Check if the eventText contains any of the disallowed characters
+                for (let char of disallowedChars) {
+                    if (eventText.includes(char)) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
+
+
+        function deleteEvent(index) {
+            // Remove the event from the events array
+            events.splice(index, 1);
+
+            // Save events to localStorage
+            localStorage.setItem('events', JSON.stringify(events));
+
+            // Update the event table
+            updateEventTable();
+        }
+
+        function updateEventTable() {
+            const tableBody = document.querySelector('#eventTable tbody');
+            tableBody.innerHTML = '';
+
+            events.forEach((eventItem, index) => {
+                const row = tableBody.insertRow();
+                // Get the color of the employee for this event
+                const employee = employees.find(emp => emp.name === eventItem.empName);
+                if (employee) {
+                    row.style.backgroundColor = employee.color;
+                }
+                row.insertCell(0).textContent = eventItem.empName;
+                row.insertCell(1).textContent = eventItem.eventTime;
+                row.insertCell(2).textContent = eventItem.eventText;
+
+                // Actions cell for holding the buttons
+                const actionsCell = row.insertCell(3);
+                actionsCell.className = "no-print";
+
+                // Edit button
+                const editButton = document.createElement('button');
+                editButton.textContent = 'Edit';
+                editButton.addEventListener('click', () => startEditMainEvent(row, eventItem));
+
+                actionsCell.appendChild(editButton);
+
+                // Delete button
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Delete';
+                deleteButton.addEventListener('click', () => deleteEvent(index));
+                actionsCell.appendChild(deleteButton);
+
+            });
+        }
+
+        function startEditMainEvent(row, eventItem) {
+            const eventTextCell = row.cells[2];
+            const originalText = eventTextCell.textContent;
+
+            const input = document.createElement('textarea');
+            input.rows = "4";
+            input.value = originalText;
+
+            eventTextCell.innerHTML = '';
+            eventTextCell.appendChild(input);
+
+            const saveButton = document.createElement('button');
+            saveButton.textContent = 'Save';
+            saveButton.addEventListener('click', () => {
+                eventItem.eventText = input.value;
+                localStorage.setItem('events', JSON.stringify(events));
+                updateEventTable();
+            });
+            const cancelButton = document.createElement('button');
+            cancelButton.textContent = "Cancel";
+            cancelButton.addEventListener('click', () => {
+                eventItem.eventText = originalText;
+                updateEventTable();
+            });
+
+            eventTextCell.appendChild(saveButton);
+            eventTextCell.appendChild(cancelButton);
+        }
+
+        function startEditImportedEvent(row, eventItem) {
+            const eventTextCell = row.cells[2];
+            const originalText = eventTextCell.textContent;
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = originalText;
+
+            eventTextCell.innerHTML = '';
+            eventTextCell.appendChild(input);
+
+            const saveButton = document.createElement('button');
+            saveButton.textContent = 'Save';
+            saveButton.addEventListener('click', () => {
+                eventItem.eventText = input.value;
+                localStorage.setItem('importedEvents', JSON.stringify(importedEvents));
+                updateImportedEventTable();
+            });
+
+            eventTextCell.appendChild(saveButton);
+        }
+
+
+
+
+
+
+        function showEventSection() {
+            document.getElementById('eventSection').style.display = 'block';
+            document.getElementById('employeeSection').style.display = 'none';
+            document.getElementById('importedEventsSection').style.display = 'block';  // Display the imported events table
+        }
+
+        /*
+EEEEE  M       M  PPPPPP  L         OOOO  Y   Y  EEEEE  EEEEE   SSSSS
+E      M M   M M  P    PP L        O   O   Y Y   E      E       S
+EEEE   M  M M  M  PPPPPP  L        O   O    Y    EEEE   EEEEE   SSSS
+E      M   M   M  P       L        O   O    Y    E      E           S
+EEEEE  M       M  P       LLLLL     OOOO    Y    EEEEE  EEEEE   SSSSS
+*/
+
+
+        //Validation
+        function validateEmployeeForm(excludeName = null) {
+            const empName = document.getElementById('empName').value.trim();
+            const empStartTime = document.getElementById('empStartTime').value;
+            const empEndTime = document.getElementById('empEndTime').value;
+
+            const errorMessage = [];
+
+            // Check if fields are filled
+            if (!empName) {
+                errorMessage.push("Employee Name is required.");
+            }
+            if (!empStartTime) {
+                errorMessage.push("Start Time is required.");
+            }
+            if (!empEndTime) {
+                errorMessage.push("End Time is required.");
+            }
+
+            // Check for duplicate employee names
+            if (employees.some(emp => emp.name.toLowerCase() === empName.toLowerCase() && emp.name.toLowerCase() !== excludeName?.toLowerCase())) {
+                errorMessage.push("An employee with this name already exists.");
+            }
+
+
+            // If there are any error messages, join them and return
+            if (errorMessage.length) {
+                return errorMessage.join(" ");
+            }
+
+            // If everything is valid
+            return null;
+        }
+        // Color Selector Swatches
+        document.querySelectorAll('.swatch').forEach(swatch => {
+            swatch.addEventListener('click', function () {
+                const color = this.getAttribute('data-color');
+                document.getElementById('empColor').value = color;
+            });
+        });
+
+        let employeeBeingEdited = null;
+        function addEditEmployee() {
+            const empName = document.getElementById('empName').value.trim();
+            const empPhone = document.getElementById('empPhone').value.trim();
+            const empColor = document.getElementById('empColor').value;
+            const empStartTime = document.getElementById('empStartTime').value;
+            const empEndTime = document.getElementById('empEndTime').value;
+            const days = [ 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            let empSchedule = days.map(day => {
+                const checkbox = document.querySelector(`input[name="day"][value="${day}"]`);
+                return checkbox && checkbox.checked ? 'X' : '-';
+            }).join('');
+
+
+
+            const validationError = employeeBeingEdited ? validateEmployeeForm(employeeBeingEdited.name) : validateEmployeeForm();
+
+            if (validationError) {
+                alert(validationError);
+                return;
+            }
+
+            if (employeeBeingEdited) {
+                // Before editing, capture the old name for later comparison
+                const oldName = employeeBeingEdited.name;
+
+                // Editing
+                employeeBeingEdited.name = empName;
+                employeeBeingEdited.phone = empPhone;
+
+                // Check if color is changed
+                if (employeeBeingEdited.color !== empColor) {
+                    employeeBeingEdited.color = empColor;
+
+                    // If color is changed, iterate through events and update the color for this employee's events
+                    events.forEach(event => {
+                        if (event.empName === oldName) {
+                            event.bgColor = empColor;
+                        }
+                    });
+
+                    // Update localStorage for events
+                    localStorage.setItem('events', JSON.stringify(events));
+                }
+
+                employeeBeingEdited.startTime = empStartTime;
+                employeeBeingEdited.endTime = empEndTime;
+                employeeBeingEdited.schedule = empSchedule;
+                employeeBeingEdited = null;  // Reset after editing
+            } else {
+                // Adding
+                const employee = { name: empName, phone: empPhone, color: empColor, startTime: empStartTime, endTime: empEndTime, schedule: empSchedule };
+                employees.push(employee);
+            }
+
+            // Save to localStorage and update tables
+            localStorage.setItem('employees', JSON.stringify(employees));
+            updateEmployeeTable();
+            populateEmployeeOptions();
+
+            // Update the event table to reflect the color changes.
+            updateEventTable();
+
+            // Clear the form
+            document.getElementById('employeeForm').reset();
+            // Reset the employee dropdown
+            document.getElementById('empSelect').value = "";
+        }
+
+        function editEmployee(employee) {
+            // Populate the form with the employee's data
+            document.getElementById('empName').value = employee.name;
+            document.getElementById('empPhone').value = employee.phone;
+            document.getElementById('empColor').value = employee.color;
+            document.getElementById('empStartTime').value = employee.startTime;
+            document.getElementById('empEndTime').value = employee.endTime;
+
+            // Set the global variable employeeBeingEdited to this employee
+            employeeBeingEdited = employee;
+            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            if (employee.schedule || employee.schedule == null) {
+                // Reset all checkboxes first
+                days.forEach(day => {
+                    const checkbox = document.querySelector(`input[name="day"][value="${day}"]`);
+                    if (checkbox) checkbox.checked = false;
+                });
+
+                // Set the checkboxes based on the schedule
+                employee.schedule.split('').forEach((char, index) => {
+                    if (char === 'X') {
+                        const day = days[index];
+                        const checkbox = document.querySelector(`input[name="day"][value="${day}"]`);
+                        if (checkbox) checkbox.checked = true;
+                    }
+                });
+            }
+        }
+
+        function deleteEmployee(name) {
+            // Remove the employee from the employees array
+            const index = employees.findIndex(emp => emp.name === name);
+            if (index !== -1) {
+                employees.splice(index, 1);
+
+                // Save employees to localStorage
+                localStorage.setItem('employees', JSON.stringify(employees));
+
+                // Update the employee table and dropdown
+                updateEmployeeTable();
+                populateEmployeeOptions();
+            }
+        }
+
+        function updateEmployeeTable() {
+            const tableBody = document.querySelector('#employeeTable tbody');
+            tableBody.innerHTML = '';
+
+            employees.forEach(employee => {
+                const row = tableBody.insertRow();
+                row.insertCell(0).textContent = employee.name;
+                row.insertCell(1).textContent = employee.phone;
+                const colorCell = row.insertCell(2);
+                colorCell.classList.add('color-cell');
+                const colorSwatch = document.createElement('div');
+                colorSwatch.className = 'color-swatch';
+                colorSwatch.style.backgroundColor = employee.color;
+                colorCell.appendChild(colorSwatch);
+                row.insertCell(3).textContent = employee.startTime;
+                row.insertCell(4).textContent = employee.endTime;
+                const scheduleCell = row.insertCell(5);
+                scheduleCell.textContent = employee.schedule;
+                const actionsCell = row.insertCell(6);
+                const editButton = document.createElement('button');
+                editButton.textContent = 'Edit';
+                editButton.addEventListener('click', () => editEmployee(employee));
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Delete';
+                deleteButton.addEventListener('click', () => deleteEmployee(employee.name));
+                actionsCell.appendChild(editButton);
+                actionsCell.appendChild(deleteButton);
+            });
+        }
+
+
+        function populateEmployeeOptions() {
+            empSelect.innerHTML = '';
+
+            employees.forEach(employee => {
+                const option = document.createElement('option');
+                option.value = employee.name;
+                option.textContent = employee.name;
+                empSelect.appendChild(option);
+            });
+        }
+
+        function showEmployeeSection() {
+            document.getElementById('eventSection').style.display = 'none';
+            document.getElementById('employeeSection').style.display = 'block';
+            document.getElementById('importedEventsSection').style.display = 'none';  // Hide the imported events table
+        }
+
+
+
+        function getEmployeesForShift(dayOfWeek, shiftStart) {
+            // Assuming you have a global 'employees' array
+            return employees.filter(emp => {
+                const empStartHour = parseInt(emp.startTime.split(':')[0]);
+                const empDaySchedule = emp.schedule[dayOfWeek];
+                return empDaySchedule === 'X' && empStartHour === shiftStart;
+            }).map(emp => emp.name);
+        }
+
+
+
+        //SCHEDULE 2.0
+
+        function generateSchedule() {
+            // Clear previous schedule
+            const scheduleContainer = document.getElementById('scheduleContainer');
+            scheduleContainer.innerHTML = '';
+
+            // Get the selected date
+            const startDate = new Date(document.getElementById('startDate').value);
+            if (startDate.getDay() !== 0) {
+                alert('Please select a Monday to generate the schedule.');
+                return;
+            }
+
+
+            // Generate the schedule for 2 weeks
+            for (let week = 0; week < 2; week++) {
+                const weekTable = document.createElement('table');
+                weekTable.className = 'schedule-table';
+
+                // Create a row for each week
+                const weekRow = weekTable.insertRow();
+
+                // Loop through each day of the week
+                for (let day = 0; day < 7; day++) {
+                    const dayCell = weekRow.insertCell();
+                    const dayTable = document.createElement('table');
+                    dayTable.className = 'day-table';
+
+                    // Set the date for the day header
+                    const date = new Date(startDate);
+                    date.setDate(startDate.getDate() + day + (week * 7));
+                    const dateString = date.toISOString().split('T')[0];
+
+                    // Create header row for the day table
+                    const headerRow = dayTable.insertRow();
+                    const headerCell = headerRow.insertCell();
+                    headerCell.colSpan = 2;
+                    headerCell.innerText = dateString;
+
+                    // Filter employees who work this day and collect their start times
+                    const workingEmployees = employees.filter(employee => employee.schedule[day] === 'X');
+                    let startTimes = [];
+                    workingEmployees.forEach(employee => {
+                        startTimes = startTimes.concat(employee.startTime);
+                    });
+
+                    // Get unique start times in ascending order
+                    const uniqueStartTimes = [...new Set(startTimes)].sort((a, b) => a.localeCompare(b));
+
+                    // Create a row for each start time
+                    uniqueStartTimes.forEach(time => {
+                        const timeRow = dayTable.insertRow();
+                        const timeCell = timeRow.insertCell();
+                        timeCell.innerText = time;
+
+                        // Create a cell for each employee who starts at this time
+                        workingEmployees.forEach(employee => {
+                            if (employee.startTime.includes(time)) {
+                                const employeeCell = timeRow.insertCell();
+                                employeeCell.innerText = employee.name;
+                                employeeCell.style.backgroundColor = employee.color;
+                            }
+                        });
+                    });
+
+                    // Append the day table to the day cell
+                    dayCell.appendChild(dayTable);
+                }
+
+                // Append the week table to the schedule container
+                scheduleContainer.appendChild(weekTable);
+            }
+        }
+
+
+        // Add more functions as needed to fetch data, handle errors, etc.
+
+
+
+
+        /*
+EEEEE  X   X  PPPPPP  OOOO  RRRRR  TTTTTTT
+E       X X   P    PP O   O R    RR    TT
+EEEE     X    PPPPPP  O   O RRRRR      TT
+E       X X   P       O   O R  RR      TT
+EEEEE  X   X  P        OOOO  R   R     TT
+*/
+
+        function eventsToXML(events) {
+            let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+            xml += '<events>\n';
+
+            events.forEach(event => {
+                xml += '  <event>\n';
+                xml += `    <empName>${event.empName}</empName>\n`;
+                xml += `    <eventTime>${event.eventTime}</eventTime>\n`;
+                xml += `    <eventText>${event.eventText}</eventText>\n`;
+                xml += `    <colorCode>${event.bgColor}</colorCode>\n`;
+                xml += '  </event>\n';
+            });
+
+            xml += '</events>';
+
+            return xml;
+        }
+
+        function downloadEventsAsXML() {
+            const xmlString = eventsToXML(events);
+            const date = getFormattedDateTime();
+            // Create a Blob from the XML string
+            const blob = new Blob([xmlString], { type: 'application/xml' });
+
+            // Create a temporary download link
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = document.getElementById('location').innerHTML + date + '.xml';
+
+            // Append the link temporarily to the document and simulate a click
+            document.body.appendChild(link);
+            link.click();
+
+            // Clean up: remove the temporary link
+            document.body.removeChild(link);
+        }
+
+
+
+
+        /*
+IIIIII  M       M  PPPPPP  OOOO  RRRRR  TTTTTTT
+  II    M M   M M  P    PP O   O R    RR   TT
+  II    M  M M  M  PPPPPP  O   O RRRRR     TT
+  II    M   M   M  P       O   O R  RR     TT
+IIIIII  M       M  P        OOOO  R   R     TT
+*/
+
+
+
+
+        // Function to handle XML file input and import data
+        function handleXMLFileInput(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+                const xmlString = e.target.result;
+                parseXML(xmlString);
+            };
+
+            reader.readAsText(file);
+        }
+
+        // Function to populate the imported events table
+        function populateImportedEventsTable() {
+            const tableBody = document.querySelector('#importedEventTable tbody');
+            tableBody.innerHTML = '';
+
+            importedEvents.forEach(event => {
+                addRowToImportedEvents(event.empName, event.eventTime, event.eventText, event.colorCode);
+            });
+        }
+
+        function importXML() {
+            // Create an input element for file selection
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.xml';
+
+            // Listen for the file selection
+            input.addEventListener('change', handleFileSelect);
+
+            // Trigger a click event to open the file dialog
+            input.click();
+
+            // Define the function to handle file selection
+            function handleFileSelect(event) {
+                const file = event.target.files[0];
+                const reader = new FileReader();
+
+                reader.onload = function (e) {
+                    const xmlString = e.target.result;
+                    console.log(xmlString);
+                    parseXML(xmlString);
+
+                };
+
+                reader.readAsText(file);
+            }
+
+            // Define the function to parse XML data
+            function parseXML(xmlString) {
+                // Create a DOMParser
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(xmlString, 'application/xml');
+
+                //Check for XML parsing errors
+                if (xmlDoc.getElementsByTagName("parsererror").length > 0) {
+                    console.error("Error parsing XML");
+
+                    return;
+                }
+
+                // Get the events from the parsed XML
+                const events = xmlDoc.querySelectorAll('event');
+
+                // Iterate through the events and populate the "Imported Events" table
+                events.forEach(event => {
+                    // Extract data from the XML elements (e.g., empName, eventTime, eventText)
+                    const empName = event.querySelector('empName')?.textContent || '';
+                    console.log("Processing empName: ", empName); // Debugging line
+                    const eventTime = event.querySelector('eventTime')?.textContent || '';
+                    const eventText = event.querySelector('eventText')?.textContent || '';
+                    let colorCode = event.querySelector('colorCode')?.textContent;
+
+                    if (!colorCode) {
+                        const matchedEmployee = employees.find(e => e.name === empName);
+                        colorCode = matchedEmployee ? matchedEmployee.color : '#FFF';
+                    }
+
+                    // Debugging lines
+                    console.log("Parsed colorCode: ", colorCode);
+                    console.log("Parsed eventTime: ", eventTime);
+                    console.log("Parsed eventText: ", eventText);
+
+                    // Add a new row to the "Imported Events" table with the extracted data
+                    addRowToImportedEvents(empName, eventTime, eventText, colorCode);
+
+                    // Append to the importedEvents array
+                    importedEvents.push({ empName, eventTime, eventText, colorCode });
+                });
+                // Update local storage after parsing all events
+                localStorage.setItem('importedEvents', JSON.stringify(importedEvents));
+            }
+
+        }
+
+        function addRowToImportedEvents(empName, eventTime, eventText, colorCode) {
+            const tableBody = document.querySelector('#importedEventTable tbody');
+            const row = tableBody.insertRow();
+            const eventItem = { empName, eventTime, eventText, colorCode };  // Create an eventItem for the current row
+
+            row.style.backgroundColor = colorCode;
+
+            const cell1 = row.insertCell(0);
+            const cell2 = row.insertCell(1);
+            const cell3 = row.insertCell(2);
+            const cell4 = row.insertCell(3);
+
+            cell1.textContent = empName;
+            cell2.textContent = eventTime;
+            cell3.textContent = eventText;
+
+            // Create "Edit" button
+            // const editButton = document.createElement('button');
+            // editButton.textContent = 'Edit';
+            // editButton.onclick = () => startEditImportedEvent(row, eventItem);
+            // cell4.appendChild(editButton);
+
+            // Create "Delete" button
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Delete';
+            deleteButton.onclick = () => deleteImportedEvent(deleteButton);
+            cell4.appendChild(deleteButton);
+        }
+
+
+        function updateImportedEventTable() {
+            const tableBody = document.querySelector('#importedEventTable tbody');
+            tableBody.innerHTML = '';
+
+            importedEvents.forEach((event, index) => {
+                const row = tableBody.insertRow();
+                row.insertCell(0).textContent = event.empName;
+                row.insertCell(1).textContent = event.eventTime;
+                row.insertCell(2).textContent = event.eventText;
+                const actionsCell = row.insertCell(3);
+                actionsCell.className = "no-print";
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Delete';
+                deleteButton.addEventListener('click', () => deleteImportedEvent(index));
+                actionsCell.appendChild(deleteButton);
+            });
+        }
+
+        function deleteImportedEvent(buttonClicked) {
+            // Determine the row and employee name for the clicked button
+            const rowToDelete = buttonClicked.closest('tr');
+            const empName = rowToDelete.cells[0].textContent;
+
+            // Find the index of the event with the given employee name
+            const index = importedEvents.findIndex(event => event.empName === empName);
+
+            // Remove the event from the importedEvents array
+            importedEvents.splice(index, 1);
+
+            // Remove the specific row from the table
+            rowToDelete.remove();
+
+            // Save importedEvents to localStorage
+            localStorage.setItem('importedEvents', JSON.stringify(importedEvents));
+        }
+
+        //Delete All imported events button
+        document.getElementById('deleteAllButton').addEventListener('click', function () {
+            // Confirm before deleting all rows
+            if (!window.confirm('Are you sure you want to delete all events?')) {
+                return;
+            }
+
+            // Clear the table rows
+            const tableBody = document.querySelector('#importedEventTable tbody');
+            tableBody.innerHTML = '';
+
+            // Clear the importedEvents array
+            importedEvents = [];
+
+            // Update localStorage
+            localStorage.setItem('importedEvents', JSON.stringify(importedEvents));
+        });
+
+
+        function getFormattedDateTime() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = (now.getMonth() + 1).toString().padStart(2, '0');
+            const day = now.getDate().toString().padStart(2, '0');
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+
+            return `${year}-${month}-${day}_${hours}-${minutes}-${seconds}`;
+        }
+
+
+        function toggleDarkMode() {
+            const body = document.body;
+            body.classList.toggle('dark-mode');
+            const tables = document.querySelectorAll('table');
+            tables.forEach(table => table.classList.toggle('dark-mode'));
+        }
+
+        document.getElementById('pageBreakToggle').addEventListener('change', function () {
+            var importedEventsSection = document.getElementById('importedEventsSection');
+
+            if (this.checked) {
+                importedEventsSection.style.removeProperty("break-before");
+            } else {
+                importedEventsSection.style.setProperty("break-before", "page");
+
+            }
+        });
+
+
+        function printReport() {
+            window.print();
+        }
+
+
+
+    </script>
+</body>
+
+</html>
